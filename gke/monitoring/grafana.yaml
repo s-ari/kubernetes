@@ -1,0 +1,45 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: grafana-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "admin"
+#        - name: GF_INSTALL_PLUGINS
+#          value: "grafana-influxdb-08-datasource"
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-home
+      volumes:
+      - name: grafana-home
+        gcePersistentDisk:
+          pdName: "grafana-home"
+          fsType: ext4
+      nodeSelector:
+        failure-domain.beta.kubernetes.io/zone: us-west1-a
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - name: grafana
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer

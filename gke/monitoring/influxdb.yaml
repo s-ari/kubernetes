@@ -1,0 +1,53 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: influxdb-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      containers:
+      - name: influxdb
+        image: influxdb:1.2.4-alpine
+        ports:
+        - containerPort: 8086
+        - containerPort: 8083
+        env:
+        - name: INFLUXDB_ADMIN_ENABLED
+          value: "true"
+        volumeMounts:
+        - mountPath: /var/lib/influxdb
+          name: influxdb-home
+        - mountPath: /etc/influxdb/
+          name: influxdb-conf
+      volumes:
+      - name: influxdb-home
+        gcePersistentDisk:
+          pdName: "influxdb-home"
+          fsType: ext4
+      - name: influxdb-conf
+        configMap:
+          name: influxdb.conf
+      nodeSelector:
+        failure-domain.beta.kubernetes.io/zone: us-west1-a
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: influxdb
+spec:
+  selector:
+    app: influxdb
+  ports:
+    - name: influxdb-admin
+      protocol: TCP
+      port: 8083
+      targetPort: 8083
+    - name: influxdb-http
+      protocol: TCP
+      port: 8086
+      targetPort: 8086
+  type: ClusterIP

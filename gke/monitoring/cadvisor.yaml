@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: cadvisor-daemonset
+spec:
+  template:
+    metadata:
+      labels:
+        app: cadvisor
+    spec:
+      containers:
+      - name: cadvisor
+        image: gcr.io/google-containers/cadvisor:latest
+        ports:
+        - containerPort: 8080
+        args:
+        - --storage_driver=influxdb
+        - --storage_driver_host=influxdb:8086
+        - --storage_driver_user=cadvisor
+        - --storage_driver_password=cadvisor
+        - --storage_driver_secure=False
+        volumeMounts:
+        - mountPath: /rootfs
+          name: rootfs
+        volumeMounts:
+        - mountPath: /var/run
+          name: run
+        volumeMounts:
+        - mountPath: /sys
+          name: sys
+        volumeMounts:
+        - mountPath: /var/lib/docker
+          name: docker
+      volumes:
+      - name: rootfs
+        hostPath:
+          path: /
+      - name: run
+        hostPath:
+          path: /var/run
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: docker
+        hostPath:
+          path: /var/lib/docker/
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cadvisor-web
+spec:
+  selector:
+    app: cadvisor
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: NodePort

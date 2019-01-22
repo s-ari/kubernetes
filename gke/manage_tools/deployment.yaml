@@ -1,0 +1,51 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: ansible-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ansible
+    spec:
+      containers:
+      - name: ansible
+        image: 
+        command: ["sleep", "infinity"]
+        volumeMounts:
+        - mountPath: /opt/ansible_home
+          name: ansible-home
+      volumes:
+      - name: ansible-home
+        gcePersistentDisk:
+          pdName: "ansible-home"
+          fsType: ext4
+      nodeSelector:
+        failure-domain.beta.kubernetes.io/zone: us-west1-a
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: serverspec-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: serverspec
+    spec:
+      containers:
+      - name: serverspec
+        image: 
+        command: ["sleep", "infinity"]
+        volumeMounts:
+        - mountPath: /opt/serverspec_home
+          name: serverspec-home
+      volumes:
+      - name: serverspec-home
+        gcePersistentDisk:
+          pdName: "serverspec-home"
+          fsType: ext4
+      nodeSelector:
+        failure-domain.beta.kubernetes.io/zone: us-west1-a
